@@ -3,6 +3,7 @@
 <title>FVC - Consultoria</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins">
 <link rel="shortcut icon" href="/static/images/logos/logo.png" type="image/x-icon">
@@ -22,7 +23,7 @@ body {font-size:16px;}
 </head>
 
 <body style="
-    background: url('/img/background.jpg') center/cover no-repeat;
+    background: url('/img/background.png') center/cover no-repeat;
 ">
 
 <!-- Sidebar/menu -->
@@ -55,7 +56,7 @@ body {font-size:16px;}
   <!-- Header -->
   <div class="w3-container" style="margin-top:80px" id="showcase">
     <h1 class="w3-jumbo"><b>FVC Consultoria</b></h1>
-    <hr style="width:600px;border:5px solid orange" class="w3-round">
+    <hr style="width:600px;border:5px solid black" class="w3-round">
   </div>
 
 <!-- Photo Carousel (Slider) - Display two images at a time with a fade transition -->
@@ -111,7 +112,7 @@ body {font-size:16px;}
   <!-- Services -->
   <div class="w3-container" id="services" style="margin-top:75px">
     <h1 class="w3-xxxlarge w3-text-black"><b>Sobre nós.</b></h1>
-    <hr style="width:600px;border:5px solid orange" class="w3-round">
+    <hr style="width:600px;border:5px solid black" class="w3-round">
 
     <h2>Apresentando a FVC - Sua Parceira em Conquistas Financeiras</h2>
     <p>Na FVC, estamos comprometidos em ajudá-lo a alcançar a estabilidade financeira e a realização de seus sonhos. Somos uma consultoria de crédito dedicada a fornecer soluções inteligentes e personalizadas para suas necessidades financeiras.</p>
@@ -137,7 +138,7 @@ body {font-size:16px;}
  <!-- Usuarios -->
 <div class="w3-container" id="designers" style="margin-top:75px">
   <h1 class="w3-xxxlarge w3-text-black"><b>Avaliações.</b></h1>
-  <hr style="width:600px;border:5px solid orange" class="w3-round">
+  <hr style="width:600px;border:5px solid black" class="w3-round">
 
   <p><b>Veja algumas das avaliações de nossos clientes</b>:</p>
 </div>
@@ -193,7 +194,7 @@ body {font-size:16px;}
 <!-- Packages / Pricing Tables -->
 <div class="w3-container" id="packages" style="margin-top:75px">
   <h1 class="w3-xxxlarge w3-text-black"><b>Nosso e-book.</b></h1>
-  <hr style="width:600px;border:5px solid orange" class="w3-round">
+  <hr style="width:600px;border:5px solid black" class="w3-round">
   <p>Adquira já nosso e-book e potencialize seu crédito!</p>
   <br/>
 </div>
@@ -202,7 +203,7 @@ body {font-size:16px;}
 
   <div class="w3-center">
     <ul class="w3-ul w3-dark-orange w3-center">
-      <li class="w3-orange w3-xlarge w3-padding-32">E-BOOK - FVC</li>
+      <li class="w3-yellow w3-xlarge w3-padding-32">E-BOOK - FVC</li>
       <li class="w3-padding-16 w3-border-orange">Potencialize seu crédito</li>
       <li class="w3-padding-16 w3-border-orange">Educação Financeira</li>
       <li class="w3-padding-16 w3-border-orange">Consolidação de Dívidas</li>
@@ -212,8 +213,8 @@ body {font-size:16px;}
         <h2>De <span style='color: red;text-decoration: line-through;'>R$195,90</span> por <span style='color: green;'>R$29,99</span>.</h2>
         <span class="w3-opacity">PDF será enviado no email.</span>
       </li>
-      <li class="w3-orange w3-padding-24">
-        <button class="w3-button w3-yellow w3-padding-large w3-hover-black" onclick="redirecionarParaPagamento()">Eu quero!</button>
+      <li class="w3-yellow w3-padding-24">
+        <button class="w3-button w3-orange w3-padding-large w3-hover-black" onclick="redirecionarParaPagamento()">Eu quero!</button>
 
       </li>
     </ul>
@@ -257,10 +258,13 @@ function enviarInformacoesCliente() {
     const email = $('#emailCliente').val();
     const cpf = $('#cpfCliente').val();
 
+    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+
     fetch('/cadastro', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json;charset=UTF-8'
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
         },
         body: JSON.stringify({ nome: nome, email: email, cpf: cpf })
     })
@@ -268,7 +272,18 @@ function enviarInformacoesCliente() {
         if (!response.ok) {
             throw new Error('Erro ao enviar dados do cliente');
         }
-        window.location.href = '/pagamento?nome=' + nome + '&email=' + email + '&cpf=' + cpf;
+
+        const locationHeader = response.headers.get('Location');
+        if (locationHeader) {
+            // Redirecionar manualmente, pois a resposta não aciona o redirecionamento automático do Fetch API
+            window.location.href = locationHeader;
+        } else {
+            return response.json();
+        }
+    })
+    .then(data => {
+        console.log('Dados do cliente recebidos com sucesso:', data);
+        // Adicione aqui qualquer lógica adicional que você precise após o sucesso
     })
     .catch(error => {
         console.error('Erro ao enviar dados do cliente:', error);

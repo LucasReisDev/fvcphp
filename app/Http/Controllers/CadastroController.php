@@ -3,18 +3,23 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Cliente;
 
 class CadastroController extends Controller
 {
     public function cadastrarCliente(Request $request)
     {
-        // Lógica para salvar os dados do cliente no banco de dados (se necessário)
-
-        // Redirecionar para a página de pagamento com os parâmetros do cliente
-        return redirect()->route('pagamento', [
-            'nome' => $request->input('nome'),
-            'email' => $request->input('email'),
-            'cpf' => $request->input('cpf'),
+        $dadosCliente = $request->validate([
+            'nome' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'cpf' => 'required|string|max:14', // Ajuste conforme necessário
         ]);
+
+        // Salvar os dados na tabela "clientes"
+        Cliente::create($dadosCliente);
+
+        return response()
+            ->json(['message' => 'Informações do cliente recebidas com sucesso'])
+            ->header('Location', route('pagamento')); // Redirecionamento para a rota 'pagamento'
     }
 }

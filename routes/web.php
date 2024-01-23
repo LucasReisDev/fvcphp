@@ -27,3 +27,4 @@ Route::get('/agradecimento', function () {
 });
 
 Route::post('/cadastro', [CadastroController::class, 'cadastrarCliente']);
+
