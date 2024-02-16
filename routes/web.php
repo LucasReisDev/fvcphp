@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CadastroController;
+use App\Http\Controllers\CompraController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,13 +20,15 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/pagamento', function () {
-    return view('pagamento');
-})->name('pagamento');
+
+Route::get('/admin', [AdminController::class, 'listarClientes'])->name('admin');
+
+Route::post('/testar-checkout-pagseguro', [CompraController::class, 'testarCheckoutPagSeguro'])->name('testar-checkout-pagseguro');
+
+Route::get('/testar-checkout-pagseguro', [CompraController::class, 'testarCheckoutPagSeguro'])->name('testar-checkout-pagseguro');
+
+Route::post('/inserir-cliente', [AdminController::class, 'inserirCliente'])->name('inserir.cliente');
 
 Route::get('/agradecimento', function () {
     return view('agradecimento');
 });
-
-Route::post('/cadastro', [CadastroController::class, 'cadastrarCliente']);
-

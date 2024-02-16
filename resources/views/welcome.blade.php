@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <title>FVC - Consultoria</title>
@@ -8,10 +9,11 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins">
 <link rel="shortcut icon" href="/static/images/logos/logo.png" type="image/x-icon">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://assets.pagseguro.com.br/checkout-sdk-js/rc/dist/browser/pagseguro.min.js"></script>
 
 <style>
 body,h1,h2,h3,h4,h5 {font-family: "Poppins", sans-serif}
@@ -223,6 +225,8 @@ body {font-size:16px;}
 </div>
 
 <!-- Adicione esse modal ao corpo do seu HTML -->
+
+
 <div class="modal fade" id="modalCliente" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -232,16 +236,26 @@ body {font-size:16px;}
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <div class="modal-body">
-        <!-- Adicione campos para o nome, e-mail, CPF, etc. -->
-        <input type="text" id="nomeCliente" class="form-control" placeholder="Nome Completo" required>
-        <input type="email" id="emailCliente" class="form-control" placeholder="Email" required>
-        <input type="text" id="cpfCliente" class="form-control" placeholder="CPF" required>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
-        <button type="button" class="btn btn-primary"  onclick="enviarInformacoesCliente()">Continuar para o pagamento</button>
-      </div>
+
+      <form id="formCliente" action="{{ route('testar-checkout-pagseguro') }}" method="post">
+        @csrf
+        <div class="modal-body">
+          <!-- Adicione campos para o nome, e-mail, CPF, etc. -->
+          <input type="text" id="nomeCliente" name="nome" class="form-control" placeholder="Nome Completo" required>
+          <small id="nomeErro" class="text-danger">Por favor, insira seu nome.</small>
+          <input type="email" id="emailCliente" name="email" class="form-control" placeholder="Email" required>
+          <small id="emailErro" class="text-danger">Por favor, insira um e-mail válido.</small>
+          <input type="text" id="cpfCliente" name="cpf" class="form-control" placeholder="CPF" required>
+          <small id="cpfErro" class="text-danger">Por favor, insira um CPF válido (apenas números).</small>
+          <input type="text" id="cttCliente" name="ctt" class="form-control" placeholder="Celular" required>
+          <small id="cttErro" class="text-danger">Por favor, insira um número de celular válido.</small>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+          <button type="button" class="btn btn-primary" onclick="enviarInformacoesCliente()">Pagar</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -249,47 +263,113 @@ body {font-size:16px;}
 <div class="w3-black w3-container w3-padding-32" style="margin-top:75px;padding-right:58px; background-color:black"><p class="w3-right">Desenvolvido por 2L TECH</p></div>
 
 <script>
+$(document).ready(function () {
+    // Adicione manipuladores de eventos para os campos de entrada
+    $('#nomeCliente').on('input', function () {
+        if ($(this).val().trim().length >= 1 && $(this).val().trim().length <= 8) {
+            $('#nomeErro').hide();
+        }
+    });
+
+    $('#emailCliente').on('input', function () {
+        if (validarEmail($(this).val())) {
+            $('#emailErro').hide();
+        }
+    });
+
+    $('#cpfCliente').on('input', function () {
+        if (validarCPF($(this).val())) {
+            $('#cpfErro').hide();
+        }
+    });
+
+    $('#cttCliente').on('input', function () {
+    if (validarCelular($(this).val())) {
+        $('#cttErro').hide();
+    }
+});
+
+});
+
+function validarCelular(ctt) {
+    return /^\d{8,9}$/.test(ctt);
+}
+
+
+// Função para validar e-mail
+function validarEmail(email) {
+    // Implemente sua lógica de validação de e-mail
+    return /\S+@\S+\.\S+/.test(email);
+}
+
+// Função para validar CPF
+function validarCPF(cpf) {
+    // Implemente sua lógica de validação de CPF
+    return /^\d{11}$/.test(cpf);
+}
+
 function redirecionarParaPagamento() {
     $('#modalCliente').modal('show');
 }
 
-function enviarInformacoesCliente() {
+ function enviarInformacoesCliente() {
     const nome = $('#nomeCliente').val();
+    console.log(nome);
     const email = $('#emailCliente').val();
+    console.log(email);
     const cpf = $('#cpfCliente').val();
+    console.log(cpf);
+    const ctt = $('#cttCliente').val();
+    console.log(ctt);
 
-    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+    // Validar campos
+    if (nome.trim().length < 1 || nome.trim().length > 8) {
+        $('#nomeErro').show();
+        return;
+    }
 
-    fetch('/cadastro', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken,
-        },
-        body: JSON.stringify({ nome: nome, email: email, cpf: cpf })
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Erro ao enviar dados do cliente');
+    if (!validarEmail(email)) {
+        $('#emailErro').show();
+        return;
+    }
+
+    if (!validarCPF(cpf)) {
+        $('#cpfErro').show();
+        return;
+    }
+
+    if (!validarCelular(ctt)) {
+        $('#cttErro').show();
+        return;
+    }
+
+$.ajax({
+    type: 'POST',
+    url: '{{ route('testar-checkout-pagseguro') }}',
+    data: {
+        _token: '{{ csrf_token() }}',
+        nome: nome,
+        email: email,
+        cpf: cpf,
+        ctt: ctt
+    },
+    success: function (response) {
+        console.log('Resposta do PagBank:', response);
+
+        window.location.href = response;
+
+        if(response.error){
+            console.log("Erro , reposta da requisicao alterada")
+
         }
-
-        const locationHeader = response.headers.get('Location');
-        if (locationHeader) {
-            // Redirecionar manualmente, pois a resposta não aciona o redirecionamento automático do Fetch API
-            window.location.href = locationHeader;
-        } else {
-            return response.json();
-        }
-    })
-    .then(data => {
-        console.log('Dados do cliente recebidos com sucesso:', data);
-        // Adicione aqui qualquer lógica adicional que você precise após o sucesso
-    })
-    .catch(error => {
-        console.error('Erro ao enviar dados do cliente:', error);
-    });
+    },
+    error: function (error) {
+        console.error('Erro na requisição:', error);
+    }
+});
+// Fechar o modal
+$('#modalCliente').modal('hide');
 }
-
 // Script to open and close sidebarlucasvo
 function w3_open() {
   document.getElementById("mySidebar").style.display = "block";
@@ -339,8 +419,6 @@ function autoSlide() {
 }
 
 autoSlide();
-
-
 
 
 </script>

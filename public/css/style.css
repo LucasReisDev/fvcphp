@@ -1,0 +1,41 @@
+.carousel {
+    z-index: 1; /* Adicione esta linha para ajustar o z-index do carrossel */
+  }
+img{
+    border-radius: 20px;
+}
+
+.video-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.lorem-ipsum {
+    margin-top: 20px;
+}
+
+
+        /* Estilo do footer */
+ footer {
+background-color: #2c3e50;
+color: white;
+padding: 20px 0;
+margin-top: 20px; /* Adicione essa linha para criar espaço acima do footer */
+        }
+
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.copyright {
+    font-size: 14px;
+}
+
+.secure-purchase {
+    font-size: 14px;
+    font-weight: bold;
+}
